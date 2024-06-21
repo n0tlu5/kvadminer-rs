@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KVAdminer-RS - Keys</title>
+</head>
+<body>
+
+    <h1>All Keys</h1>
+    <ul id="keys-list"></ul>
+    <button id="prev-page">Previous</button>
+    <button id="next-page">Next</button>
+
+    <script>
+        const host = localStorage.getItem('redis_host');
+        const port = localStorage.getItem('redis_port');
+        const username = localStorage.getItem('redis_user');
+        const password = localStorage.getItem('redis_password');
+
+        let currentPage = 0;
+        const pageSize = 10;
+
+        async function fetchKeys() {
+            const queryParams = new URLSearchParams({ host, port, username, password }).toString();
+            const response = await fetch(`/keys?${queryParams}`);
+            const keys = await response.json();
+            return keys;
+        }
+
+        function displayKeys(keys) {
+            const keysList = document.getElementById('keys-list');
+            keysList.innerHTML = '';
+
+            const start = currentPage * pageSize;
+            const end = start + pageSize;
+            const pagedKeys = keys.slice(start, end);
+
+            pagedKeys.forEach(key => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="/static/key-edit.html?key=${encodeURIComponent(key)}">${key}</a>`;
+                keysList.appendChild(li);
+            });
+        }
+
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (currentPage > 0) {
+                currentPage--;
+                fetchKeys().then(displayKeys);
+            }
+        });
+
+        document.getElementById('next-page').addEventListener('click', () => {
+            currentPage++;
+            fetchKeys().then(displayKeys);
+        });
+
+        fetchKeys().then(displayKeys);
+    </script>
+</body>
+</html>
+
