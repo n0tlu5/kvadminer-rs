@@ -1,18 +1,13 @@
 services:
   web:
-    image: rust:1.79.0-slim
+    image: n0tlu5/kvadminer-rs:latest
     ports:
-      - "8080:8080"
+      - 8080:8080
     environment:
       - REDIS_URL=redis://redis:6379/
       - REDIS_HOST=redis
     depends_on:
       - redis
-    volumes:
-      - .:/usr/src/app
-      - cargo-cache:/usr/local/cargo # Cache the Cargo build directory to speed up builds
-    working_dir: /usr/src/app
-    entrypoint: ["./build_and_run.sh"]
 
   redis:
     image: "redis:alpine"
