@@ -6,17 +6,27 @@
     <title>KVAdminer-RS - Edit Key</title>
 </head>
 <body>
-    <h1>Edit Key</h1>
-    <form id="edit-form">
-        <label for="key">Key:</label>
-        <input type="text" id="key" name="key" readonly><br>
-        <label for="value">Value:</label>
-
-        <input type="text" id="value" name="value"><br>
-        <button type="submit">Save</button>
-    </form>
+    <div id="sidebar-container"></div>
+    <div id="content-container">
+        <h1>Edit Key</h1>
+        <form id="edit-form">
+            <label for="key">Key:</label>
+            <input type="text" id="key" name="key" readonly><br>
+            <label for="value">Value:</label>
+            <input type="text" id="value" name="value"><br>
+            <button type="submit">Save</button>
+        </form>
+    </div>
 
     <script>
+        fetch('/static/sidebar.html')
+            .then(response => response.text())
+            .then(html => document.getElementById('sidebar-container').innerHTML = html);
+        
+        fetch('/static/footer.html')
+            .then(response => response.text())
+            .then(html => document.getElementById('content-container').insertAdjacentHTML('beforeend', html));
+
         const host = localStorage.getItem('redis_host');
         const port = localStorage.getItem('redis_port');
         const username = localStorage.getItem('redis_user');
@@ -33,7 +43,6 @@
                 document.getElementById('value').value = value;
             });
 
-
         document.getElementById('edit-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const value = document.getElementById('value').value;
@@ -45,12 +54,12 @@
                 },
                 body: JSON.stringify({ key, value })
             })
+
             .then(response => {
                 if (response.ok) {
                     alert('Key saved successfully');
                 } else {
                     alert('Failed to save key');
-
                 }
             });
         });

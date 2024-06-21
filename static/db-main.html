@@ -6,13 +6,23 @@
     <title>KVAdminer-RS - Keys</title>
 </head>
 <body>
-
-    <h1>All Keys</h1>
-    <ul id="keys-list"></ul>
-    <button id="prev-page">Previous</button>
-    <button id="next-page">Next</button>
+    <div id="sidebar-container"></div>
+    <div id="content-container">
+        <h1>All Keys</h1>
+        <ul id="keys-list"></ul>
+        <button id="prev-page">Previous</button>
+        <button id="next-page">Next</button>
+    </div>
 
     <script>
+        fetch('/static/sidebar.html')
+            .then(response => response.text())
+            .then(html => document.getElementById('sidebar-container').innerHTML = html);
+        
+        fetch('/static/footer.html')
+            .then(response => response.text())
+            .then(html => document.getElementById('content-container').insertAdjacentHTML('beforeend', html));
+
         const host = localStorage.getItem('redis_host');
         const port = localStorage.getItem('redis_port');
         const username = localStorage.getItem('redis_user');
