@@ -1,52 +1,62 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KVAdminer-RS</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KVAdminer-RS</title>
 </head>
 <body>
-    <div id="sidebar-container"></div>
-    <div id="content-container">
-        <h1>Connect to Redis</h1>
-        <form id="connect-form">
-            <label for="host">Host:</label>
-            <input type="text" id="host" name="host" required><br>
-            <label for="port">Port:</label>
-            <input type="text" id="port" name="port" required><br>
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username"><br>
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password"><br>
-            <button type="submit">Connect</button>
-        </form>
-    </div>
+  <div id="sidebar-container"></div>
+  <div id="content-container">
+    <h1>Connect to Redis</h1>
+    <form id="connect-form">
+      <label for="host">Host:</label>
+      <input type="text" id="host" name="host" required>
+      <br>
+      <label for="port">Port:</label>
+      <input type="text" id="port" name="port" required>
+      <br>
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username">
+      <br>
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password">
+      <br>
+      <button type="submit">Connect</button>
+    </form>
+  </div>
 
-    <script>
-        fetch('/static/sidebar.html')
-            .then(response => response.text())
-            .then(html => document.getElementById('sidebar-container').innerHTML = html);
-        
+  <script>
+  fetch("/static/sidebar.html")
+    .then(response => response.text())
+    .then(
+      html => (document.getElementById("sidebar-container").innerHTML = html)
+    );
 
-        fetch('/static/footer.html')
-            .then(response => response.text())
-            .then(html => document.getElementById('content-container').insertAdjacentHTML('beforeend', html));
+  fetch("/static/footer.html")
+    .then(response => response.text())
+    .then(html =>
+      document
+        .getElementById("content-container")
+        .insertAdjacentHTML("beforeend", html)
+    );
 
-        document.getElementById('connect-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const host = document.getElementById('host').value;
-            const port = document.getElementById('port').value;
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+  document
+    .getElementById("connect-form")
+    .addEventListener("submit", function(event) {
+      event.preventDefault();
+      const host = document.getElementById("host").value;
+      const port = document.getElementById("port").value;
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
 
-            localStorage.setItem('redis_host', host);
-            localStorage.setItem('redis_port', port);
-            localStorage.setItem('redis_user', username);
-            localStorage.setItem('redis_password', password);
+      localStorage.setItem("redis_host", host);
+      localStorage.setItem("redis_port", port);
+      localStorage.setItem("redis_user", username);
+      localStorage.setItem("redis_password", password);
 
-            window.location.href = '/static/db-main.html';
-        });
-    </script>
+      window.location.href = "/static/db-main.html";
+    });
+  </script>
 </body>
 </html>
-

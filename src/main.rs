@@ -1,5 +1,5 @@
 use actix_files as fs;
-use actix_web::{web, App, HttpServer, Responder, HttpResponse, ResponseError};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder, ResponseError};
 use redis::Commands;
 use serde::Deserialize;
 
@@ -19,14 +19,17 @@ impl fmt::Display for KVAdminerError {
             KVAdminerError::InvalidRedisUrl => write!(f, "Invalid Redis URL"),
         }
     }
-
 }
 
 impl ResponseError for KVAdminerError {
     fn error_response(&self) -> HttpResponse {
         match self {
-            KVAdminerError::RedisError(err) => HttpResponse::InternalServerError().body(err.clone()),
-            KVAdminerError::InvalidRedisUrl => HttpResponse::InternalServerError().body("Invalid Redis URL"),
+            KVAdminerError::RedisError(err) => {
+                HttpResponse::InternalServerError().body(err.clone())
+            }
+            KVAdminerError::InvalidRedisUrl => {
+                HttpResponse::InternalServerError().body("Invalid Redis URL")
+            }
         }
     }
 }
@@ -52,12 +55,14 @@ struct SetKeyRequest {
     value: String,
 }
 
-
 async fn index() -> impl Responder {
     HttpResponse::Ok().body("Welcome to the KVAdminer-RS Web App")
 }
 
-async fn get_key(info: web::Query<RedisInfo>, key: web::Path<String>) -> Result<HttpResponse, KVAdminerError> {
+async fn get_key(
+    info: web::Query<RedisInfo>,
+    key: web::Path<String>,
+) -> Result<HttpResponse, KVAdminerError> {
     let client = create_redis_client(&info)?;
     let mut con = client.get_connection()?;
     let value: Result<String, _> = con.get(&*key);
@@ -67,8 +72,10 @@ async fn get_key(info: web::Query<RedisInfo>, key: web::Path<String>) -> Result<
     }
 }
 
-async fn set_key(info: web::Query<RedisInfo>, item: web::Json<SetKeyRequest>) -> Result<HttpResponse, KVAdminerError> {
-
+async fn set_key(
+    info: web::Query<RedisInfo>,
+    item: web::Json<SetKeyRequest>,
+) -> Result<HttpResponse, KVAdminerError> {
     let client = create_redis_client(&info)?;
     let mut con = client.get_connection()?;
 
@@ -80,8 +87,10 @@ async fn set_key(info: web::Query<RedisInfo>, item: web::Json<SetKeyRequest>) ->
     }
 }
 
-async fn delete_key(info: web::Query<RedisInfo>, key: web::Path<String>) -> Result<HttpResponse, KVAdminerError> {
-
+async fn delete_key(
+    info: web::Query<RedisInfo>,
+    key: web::Path<String>,
+) -> Result<HttpResponse, KVAdminerError> {
     let client = create_redis_client(&info)?;
     let mut con = client.get_connection()?;
 
@@ -97,19 +106,18 @@ async fn list_keys(info: web::Query<RedisInfo>) -> Result<HttpResponse, KVAdmine
     let mut con = client.get_connection()?;
     let keys: Result<Vec<String>, _> = con.keys("*");
     match keys {
-
         Ok(keys) => Ok(HttpResponse::Ok().json(keys)),
         Err(_) => Ok(HttpResponse::InternalServerError().body("Failed to list keys")),
-
     }
 }
 
 fn create_redis_client(info: &RedisInfo) -> Result<redis::Client, KVAdminerError> {
     let redis_url = if let Some(username) = &info.username {
-
         if let Some(password) = &info.password {
-
-            format!("redis://{}:{}@{}:{}/", username, password, info.host, info.port)
+            format!(
+                "redis://{}:{}@{}:{}/",
+                username, password, info.host, info.port
+            )
         } else {
             format!("redis://{}@{}:{}/", username, info.host, info.port)
         }
@@ -133,6 +141,4 @@ async fn main() -> std::io::Result<()> {
     .bind("0.0.0.0:8080")?
     .run()
     .await
-
 }
-

@@ -1,69 +1,81 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KVAdminer-RS - Edit Key</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KVAdminer-RS - Edit Key</title>
 </head>
 <body>
-    <div id="sidebar-container"></div>
-    <div id="content-container">
-        <h1>Edit Key</h1>
-        <form id="edit-form">
-            <label for="key">Key:</label>
-            <input type="text" id="key" name="key" readonly><br>
-            <label for="value">Value:</label>
-            <input type="text" id="value" name="value"><br>
-            <button type="submit">Save</button>
-        </form>
-    </div>
+  <div id="sidebar-container"></div>
+  <div id="content-container">
+    <h1>Edit Key</h1>
+    <form id="edit-form">
+      <label for="key">Key:</label>
+      <input type="text" id="key" name="key" readonly>
+      <br>
+      <label for="value">Value:</label>
+      <input type="text" id="value" name="value">
+      <br>
+      <button type="submit">Save</button>
+    </form>
+  </div>
 
-    <script>
-        fetch('/static/sidebar.html')
-            .then(response => response.text())
-            .then(html => document.getElementById('sidebar-container').innerHTML = html);
-        
-        fetch('/static/footer.html')
-            .then(response => response.text())
-            .then(html => document.getElementById('content-container').insertAdjacentHTML('beforeend', html));
+  <script>
+  fetch("/static/sidebar.html")
+    .then(response => response.text())
+    .then(
+      html => (document.getElementById("sidebar-container").innerHTML = html)
+    );
 
-        const host = localStorage.getItem('redis_host');
-        const port = localStorage.getItem('redis_port');
-        const username = localStorage.getItem('redis_user');
-        const password = localStorage.getItem('redis_password');
+  fetch("/static/footer.html")
+    .then(response => response.text())
+    .then(html =>
+      document
+        .getElementById("content-container")
+        .insertAdjacentHTML("beforeend", html)
+    );
 
-        const params = new URLSearchParams(window.location.search);
-        const key = params.get('key');
+  const host = localStorage.getItem("redis_host");
+  const port = localStorage.getItem("redis_port");
+  const username = localStorage.getItem("redis_user");
+  const password = localStorage.getItem("redis_password");
 
-        document.getElementById('key').value = key;
+  const params = new URLSearchParams(window.location.search);
+  const key = params.get("key");
 
-        fetch(`/get/${key}?host=${host}&port=${port}&username=${username}&password=${password}`)
-            .then(response => response.text())
-            .then(value => {
-                document.getElementById('value').value = value;
-            });
+  document.getElementById("key").value = key;
 
-        document.getElementById('edit-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const value = document.getElementById('value').value;
+  fetch(
+    `/get/${key}?host=${host}&port=${port}&username=${username}&password=${password}`
+  )
+    .then(response => response.text())
+    .then(value => {
+      document.getElementById("value").value = value;
+    });
 
-            fetch(`/set?host=${host}&port=${port}&username=${username}&password=${password}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ key, value })
-            })
+  document
+    .getElementById("edit-form")
+    .addEventListener("submit", function(event) {
+      event.preventDefault();
+      const value = document.getElementById("value").value;
 
-            .then(response => {
-                if (response.ok) {
-                    alert('Key saved successfully');
-                } else {
-                    alert('Failed to save key');
-                }
-            });
-        });
-    </script>
+      fetch(
+        `/set?host=${host}&port=${port}&username=${username}&password=${password}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ key, value })
+        }
+      ).then(response => {
+        if (response.ok) {
+          alert("Key saved successfully");
+        } else {
+          alert("Failed to save key");
+        }
+      });
+    });
+  </script>
 </body>
 </html>
-
