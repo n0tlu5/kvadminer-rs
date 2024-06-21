@@ -1,135 +1,33 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KVAdminer-RS - Keys</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KVAdminer-RS - Keys</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <div id="sidebar-container"></div>
-  <div id="content-container">
-    <h1>All Keys</h1>
+    <div class="sidebar">
+        <h3>KVAdminer-RS</h3>
+        <a href="/static/index.html" data-tooltip="Connect to Server">Connect to DB</a>
+        <a href="/static/db-main.html" data-tooltip="View and manage keys">DB Main</a>
+        <a href="/static/key-edit.html" data-tooltip="Edit an existing key">Key Edit</a>
+    </div>
+    <div class="content">
+        <h1>All Keys</h1>
+        <ul id="keys-list"></ul>
+        <button id="prev-page">Previous</button>
+        <button id="next-page">Next</button>
+        <h2>Create Key</h2>
 
-    <ul id="keys-list"></ul>
-    <button id="prev-page">Previous</button>
-    <button id="next-page">Next</button>
-    <h2>Create Key</h2>
-    <form id="create-form">
-      <label for="new-key">Key:</label>
-      <input type="text" id="new-key" name="new-key" required>
-      <br>
-
-      <label for="new-value">Value:</label>
-      <input type="text" id="new-value" name="new-value" required>
-      <br>
-      <button type="submit">Create</button>
-    </form>
-  </div>
-
-  <script>
-  fetch("/static/sidebar.html")
-    .then(response => response.text())
-    .then(
-      html => (document.getElementById("sidebar-container").innerHTML = html)
-    );
-
-  fetch("/static/footer.html")
-    .then(response => response.text())
-    .then(html =>
-      document
-        .getElementById("content-container")
-        .insertAdjacentHTML("beforeend", html)
-    );
-
-  const host = localStorage.getItem("redis_host");
-  const port = localStorage.getItem("redis_port");
-  const username = localStorage.getItem("redis_user");
-
-  const password = localStorage.getItem("redis_password");
-
-  let currentPage = 0;
-  const pageSize = 10;
-
-  async function fetchKeys() {
-    const queryParams = new URLSearchParams({
-      host,
-      port,
-      username,
-      password
-    }).toString();
-    const response = await fetch(`/keys?${queryParams}`);
-    const keys = await response.json();
-    return keys;
-  }
-
-  function displayKeys(keys) {
-    const keysList = document.getElementById("keys-list");
-    keysList.innerHTML = "";
-
-    const start = currentPage * pageSize;
-    const end = start + pageSize;
-
-    const pagedKeys = keys.slice(start, end);
-
-    pagedKeys.forEach(key => {
-      const li = document.createElement("li");
-      li.innerHTML = `<a href="/static/key-edit.html?key=${encodeURIComponent(
-        key
-      )}">${key}</a> <button onclick="deleteKey('${key}')">Delete</button>`;
-      keysList.appendChild(li);
-    });
-  }
-
-  document.getElementById("prev-page").addEventListener("click", () => {
-    if (currentPage > 0) {
-      currentPage--;
-      fetchKeys().then(displayKeys);
-    }
-  });
-
-  document.getElementById("next-page").addEventListener("click", () => {
-    currentPage++;
-    fetchKeys().then(displayKeys);
-  });
-
-  async function deleteKey(key) {
-    const queryParams = new URLSearchParams({
-      host,
-      port,
-      username,
-      password
-    }).toString();
-    await fetch(`/delete/${key}?${queryParams}`, { method: "DELETE" });
-    fetchKeys().then(displayKeys);
-  }
-
-  document
-    .getElementById("create-form")
-    .addEventListener("submit", async function(event) {
-      event.preventDefault();
-      const newKey = document.getElementById("new-key").value;
-      const newValue = document.getElementById("new-value").value;
-
-      const queryParams = new URLSearchParams({
-        host,
-        port,
-        username,
-        password
-      }).toString();
-      await fetch(`/set?${queryParams}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ key: newKey, value: newValue })
-      });
-
-      document.getElementById("new-key").value = "";
-      document.getElementById("new-value").value = "";
-      fetchKeys().then(displayKeys);
-    });
-
-  fetchKeys().then(displayKeys);
-  </script>
+        <form id="create-form">
+            <label for="new-key">Key:</label>
+            <input type="text" id="new-key" name="new-key" required>
+            <label for="new-value">Value:</label>
+            <input type="text" id="new-value" name="new-value" required>
+            <button type="submit">Create</button>
+        </form>
+    </div>
+    <script src="/static/scripts.js"></script>
 </body>
 </html>

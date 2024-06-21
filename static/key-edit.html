@@ -1,81 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KVAdminer-RS - Edit Key</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KVAdminer-RS - Edit Key</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
+
 <body>
-  <div id="sidebar-container"></div>
-  <div id="content-container">
-    <h1>Edit Key</h1>
-    <form id="edit-form">
-      <label for="key">Key:</label>
-      <input type="text" id="key" name="key" readonly>
-      <br>
-      <label for="value">Value:</label>
-      <input type="text" id="value" name="value">
-      <br>
-      <button type="submit">Save</button>
-    </form>
-  </div>
+    <div class="sidebar">
+        <h3>KVAdminer-RS</h3>
+        <a href="/static/index.html" data-tooltip="Connect to Server">Connect to DB</a>
+        <a href="/static/db-main.html" data-tooltip="View and manage keys">DB Main</a>
+        <a href="/static/key-edit.html" data-tooltip="Edit an existing key">Key Edit</a>
+    </div>
+    <div class="content">
+        <h1>Edit Key</h1>
 
-  <script>
-  fetch("/static/sidebar.html")
-    .then(response => response.text())
-    .then(
-      html => (document.getElementById("sidebar-container").innerHTML = html)
-    );
+        <form id="edit-form">
+            <label for="key">Key:</label>
 
-  fetch("/static/footer.html")
-    .then(response => response.text())
-    .then(html =>
-      document
-        .getElementById("content-container")
-        .insertAdjacentHTML("beforeend", html)
-    );
-
-  const host = localStorage.getItem("redis_host");
-  const port = localStorage.getItem("redis_port");
-  const username = localStorage.getItem("redis_user");
-  const password = localStorage.getItem("redis_password");
-
-  const params = new URLSearchParams(window.location.search);
-  const key = params.get("key");
-
-  document.getElementById("key").value = key;
-
-  fetch(
-    `/get/${key}?host=${host}&port=${port}&username=${username}&password=${password}`
-  )
-    .then(response => response.text())
-    .then(value => {
-      document.getElementById("value").value = value;
-    });
-
-  document
-    .getElementById("edit-form")
-    .addEventListener("submit", function(event) {
-      event.preventDefault();
-      const value = document.getElementById("value").value;
-
-      fetch(
-        `/set?host=${host}&port=${port}&username=${username}&password=${password}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ key, value })
-        }
-      ).then(response => {
-        if (response.ok) {
-          alert("Key saved successfully");
-        } else {
-          alert("Failed to save key");
-        }
-      });
-    });
-  </script>
+            <input type="text" id="key" name="key" readonly>
+            <label for="value">Value:</label>
+            <input type="text" id="value" name="value">
+            <button type="submit">Save</button>
+        </form>
+    </div>
+    <script src="/static/scripts.js"></script>
 </body>
+
 </html>

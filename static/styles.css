@@ -1,106 +1,127 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-  body {
+body {
     display: flex;
     margin: 0;
     font-family: Arial, sans-serif;
-  }
-  .sidebar {
-    width: 200px;
+}
 
+.sidebar {
+    width: 200px;
     background-color: #f8f9fa;
     padding: 15px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
     overflow-y: auto;
-  }
-  .sidebar h3 {
-    text-align: center;
+    z-index: 1000;
+}
 
+
+.sidebar h3 {
+    text-align: center;
     color: #333;
-  }
-  .sidebar a {
+}
+
+.sidebar a {
     display: block;
     padding: 10px;
     color: #333;
     text-decoration: none;
     margin-bottom: 10px;
-  }
-  .sidebar a:hover {
+
+    position: relative;
+}
+
+
+.sidebar a:hover {
     background-color: #e9ecef;
-  }
-  .content {
+}
+
+.sidebar a[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 0%;
+
+    top: 100%;
+    transform: translateY(-50%);
+    background-color: #333;
+    color: #fff;
+    padding: 5px;
+    border-radius: 5px;
+    white-space: nowrap;
+    z-index: 1001;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    opacity: 0.4
+}
+
+
+.content {
     margin-left: 220px;
     padding: 20px;
     flex: 1;
     background-color: #f0f2f5;
     min-height: 100vh;
-  }
-  h1 {
+}
+
+h1 {
     color: #333;
-  }
-  form {
+}
+
+form {
     display: flex;
     flex-direction: column;
     max-width: 400px;
-  }
-  label {
-    margin-bottom: 5px;
+}
 
+label {
+    margin-bottom: 5px;
     color: #333;
-  }
-  input {
+}
+
+input {
     padding: 10px;
+
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
-  }
-  button {
+}
+
+button {
     padding: 10px;
     background-color: #007bff;
     color: #fff;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-  }
-  button:hover {
+}
+
+button:hover {
     background-color: #0056b3;
-  }
-  ul {
+}
+
+ul {
     list-style: none;
+
     padding: 0;
-  }
-  li {
+}
+
+
+li {
     background-color: #fff;
     padding: 10px;
-
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
-  }
-  li a {
+    display: flex;
+    justify-content: space-between;
+}
+
+li a {
     text-decoration: none;
     color: #007bff;
-  }
-  li a:hover {
+}
+
+li a:hover {
     text-decoration: underline;
-  }
-  </style>
-</head>
-<body>
-  <div class="sidebar">
-    <h3>KVAdminer-RS</h3>
-    <a href="/static/index.html">Connect to DB</a>
-    <a href="/static/db-main.html">DB Main</a>
-    <a href="/static/key-edit.html">Key Edit</a>
-  </div>
-  <div class="content"></div>
-</body>
-</html>
+}
