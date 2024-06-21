@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kvadminer-rs.fullname" . }}
+  labels:
+    {{- include "kvadminer-rs.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "kvadminer-rs.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "kvadminer-rs.name" . }}
+    spec:
+      containers:
+        - name: kvadminer-rs
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: REDIS_URL
+              value: "redis://redis:6379/"
+        - name: redis
+          image: "redis:alpine"
+          ports:
+            - containerPort: 6379

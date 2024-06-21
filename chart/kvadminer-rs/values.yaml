@@ -1,0 +1,20 @@
+replicaCount: 1
+image:
+  repository: n0tlu5/kvadminer-rs
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 8080
+
+ingress:
+  enabled: false
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: []
+
+serviceAccount:
+  create: false
