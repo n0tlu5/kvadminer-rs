@@ -6,12 +6,24 @@
     <title>KVAdminer-RS - Keys</title>
 </head>
 <body>
+
     <div id="sidebar-container"></div>
     <div id="content-container">
         <h1>All Keys</h1>
+
         <ul id="keys-list"></ul>
         <button id="prev-page">Previous</button>
         <button id="next-page">Next</button>
+        <h2>Create Key</h2>
+        <form id="create-form">
+            <label for="new-key">Key:</label>
+            <input type="text" id="new-key" name="new-key" required><br>
+
+            <label for="new-value">Value:</label>
+            <input type="text" id="new-value" name="new-value" required><br>
+            <button type="submit">Create</button>
+
+        </form>
     </div>
 
     <script>
@@ -26,7 +38,9 @@
         const host = localStorage.getItem('redis_host');
         const port = localStorage.getItem('redis_port');
         const username = localStorage.getItem('redis_user');
+
         const password = localStorage.getItem('redis_password');
+
 
         let currentPage = 0;
         const pageSize = 10;
@@ -42,13 +56,15 @@
             const keysList = document.getElementById('keys-list');
             keysList.innerHTML = '';
 
+
             const start = currentPage * pageSize;
             const end = start + pageSize;
+
             const pagedKeys = keys.slice(start, end);
 
             pagedKeys.forEach(key => {
                 const li = document.createElement('li');
-                li.innerHTML = `<a href="/static/key-edit.html?key=${encodeURIComponent(key)}">${key}</a>`;
+                li.innerHTML = `<a href="/static/key-edit.html?key=${encodeURIComponent(key)}">${key}</a> <button onclick="deleteKey('${key}')">Delete</button>`;
                 keysList.appendChild(li);
             });
         }
@@ -62,6 +78,31 @@
 
         document.getElementById('next-page').addEventListener('click', () => {
             currentPage++;
+            fetchKeys().then(displayKeys);
+        });
+
+        async function deleteKey(key) {
+            const queryParams = new URLSearchParams({ host, port, username, password }).toString();
+            await fetch(`/delete/${key}?${queryParams}`, { method: 'DELETE' });
+            fetchKeys().then(displayKeys);
+        }
+
+        document.getElementById('create-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const newKey = document.getElementById('new-key').value;
+            const newValue = document.getElementById('new-value').value;
+
+            const queryParams = new URLSearchParams({ host, port, username, password }).toString();
+            await fetch(`/set?${queryParams}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ key: newKey, value: newValue })
+            });
+
+            document.getElementById('new-key').value = '';
+            document.getElementById('new-value').value = '';
             fetchKeys().then(displayKeys);
         });
 
