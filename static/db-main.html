@@ -3,31 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KVAdminer-RS - Keys</title>
+    <title>KVAdminer-RS - Keys Management</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="sidebar">
-        <h3>KVAdminer-RS</h3>
-        <a href="/static/index.html" data-tooltip="Connect to Server">Connect to DB</a>
-        <a href="/static/db-main.html" data-tooltip="View and manage keys">DB Main</a>
-        <a href="/static/key-edit.html" data-tooltip="Edit an existing key">Key Edit</a>
+    <div class="info-bar">Not connected</div>
+    <div class="main-content">
+        <div class="sidebar">
+            <h3>KVAdminer-RS</h3>
+            <a href="/static/index.html" data-tooltip="Connect to kv database">Connect to DB</a>
+            <a href="/static/db-main.html" data-tooltip="View and manage keys">Keys Management</a>
+        </div>
+        <div class="content">
+            <h1>All Keys</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="keys-table-body"></tbody>
+            </table>
+            <div id="pagination-info"></div>
+            <button id="prev-page">Previous</button>
+            <button id="next-page">Next</button>
+            <h2>Create Key</h2>
+            <form id="create-form" class="inline-form">
+                <label for="new-key">Key:</label>
+                <input type="text" id="new-key" name="new-key" required>
+                <label for="new-value">Value:</label>
+                <input type="text" id="new-value" name="new-value" required>
+                <button type="submit">Create</button>
+            </form>
+        </div>
     </div>
-    <div class="content">
-        <h1>All Keys</h1>
-        <ul id="keys-list"></ul>
-        <button id="prev-page">Previous</button>
-        <button id="next-page">Next</button>
-        <h2>Create Key</h2>
-
-        <form id="create-form">
-            <label for="new-key">Key:</label>
-            <input type="text" id="new-key" name="new-key" required>
-            <label for="new-value">Value:</label>
-            <input type="text" id="new-value" name="new-value" required>
-            <button type="submit">Create</button>
-        </form>
-    </div>
-    <script src="/static/scripts.js"></script>
+    <script src="/static/scripts/db-main.js"></script>
 </body>
 </html>
