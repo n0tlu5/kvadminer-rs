@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const infoBar = document.createElement('div');
-    infoBar.className = 'info-bar';
-    document.body.prepend(infoBar);
+    const infoBar = document.getElementById('info-bar');
 
     const host = localStorage.getItem('redis_host');
     const port = localStorage.getItem('redis_port');
