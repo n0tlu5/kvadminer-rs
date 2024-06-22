@@ -23,12 +23,6 @@ You can run KVAdminer-RS using Docker.
 docker run --rm -d -p 8080:8080 --name kvadminer-rs n0tlu5/kvadminer-rs:latest
 ```
 
-Then, start the application with:
-
-```sh
-docker-compose up -d
-```
-
 ## Usage
 
 Once the application is running, you can access it at http://localhost:8080.
