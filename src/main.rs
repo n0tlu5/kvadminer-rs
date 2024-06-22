@@ -218,7 +218,7 @@ async fn main() -> std::io::Result<()> {
             .route("/set", web::post().to(set_key))
             .route("/delete/{key}", web::delete().to(delete_key))
             .route("/keys", web::get().to(list_keys))
-            .service(actix_files::Files::new("/static", "./static"))
+            .service(actix_files::Files::new("/public", "./static/public"))
     })
     .bind("0.0.0.0:8080")?
     .run()
