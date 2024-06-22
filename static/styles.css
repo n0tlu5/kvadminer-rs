@@ -128,7 +128,6 @@ button:hover {
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
 }
 
 table, th, td {
@@ -175,4 +174,32 @@ th {
 
 .closebtn:hover {
     color: black;
+}
+
+#top-controls,
+#bottom-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    justify-content: flex-end;
+}
+
+.pagination-controls input[type="text"],
+.pagination-controls select {
+    width: 50px;
+    text-align: center;
+}
+
+#search-input-top,
+#search-input-bottom {
+    flex-grow: 0.2;
+    margin-right: 10px;
 }

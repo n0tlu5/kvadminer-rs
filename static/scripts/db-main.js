@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const infoBar = document.createElement('div');
-    infoBar.className = 'info-bar';
-    document.body.prepend(infoBar);
+    const infoBar = document.getElementById('info-bar');
 
     const host = localStorage.getItem('redis_host');
     const port = localStorage.getItem('redis_port');
@@ -11,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (host && port) {
         infoBar.textContent = `Connected to ${host}:${port} as ${username ? username : 'anonymous'}`;
     } else {
-        infoBar.textContent = `Connected to ${host}:${port}`;
+        infoBar.textContent = `Not connected`;
     }
 
     function showAlert(message, type = 'error') {
@@ -23,16 +21,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     let currentPage = 0;
-    const pageSize = 10;
+    const defaultPageSize = 10;
+    const pageSizeDropdowns = document.querySelectorAll('[id^="page-size"]');
+    pageSizeDropdowns.forEach(dropdown => dropdown.value = defaultPageSize);
 
-    async function fetchKeys() {
+    async function fetchKeys(searchQuery = '') {
+        const pageSize = parseInt(pageSizeDropdowns[0].value) || defaultPageSize;
         const queryParams = new URLSearchParams({
             host,
             port,
             username,
             password,
             page: currentPage,
-            page_size: pageSize
+            page_size: pageSize,
+            search: searchQuery
         }).toString();
         const response = await fetch(`/keys?${queryParams}`);
         if (!response.ok) {
@@ -58,19 +60,44 @@ document.addEventListener('DOMContentLoaded', function () {
             keysTable.appendChild(row);
         });
 
-        document.getElementById('pagination-info').textContent = `Page ${paginationData.current_page + 1} of ${paginationData.total_pages}`;
+        const currentPageInputs = document.querySelectorAll('[id^="current-page"]');
+        const totalPagesSpans = document.querySelectorAll('[id^="total-pages"]');
+
+        currentPageInputs.forEach(input => input.value = paginationData.current_page + 1);
+        totalPagesSpans.forEach(span => span.textContent = paginationData.total_pages);
+        currentPage = paginationData.current_page;
     }
 
-    document.getElementById('prev-page').addEventListener('click', () => {
-        if (currentPage > 0) {
-            currentPage--;
-            fetchKeys().then(displayKeys);
+    function updatePage(newPage) {
+        if (newPage >= 0) {
+            currentPage = newPage;
+            const searchQuery = document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value;
+            fetchKeys(searchQuery).then(displayKeys);
         }
+    }
+
+    document.querySelectorAll('[id^="prev-page"]').forEach(button => {
+        button.addEventListener('click', () => updatePage(currentPage - 1));
     });
 
-    document.getElementById('next-page').addEventListener('click', () => {
-        currentPage++;
-        fetchKeys().then(displayKeys);
+    document.querySelectorAll('[id^="next-page"]').forEach(button => {
+        button.addEventListener('click', () => updatePage(currentPage + 1));
+    });
+
+    document.querySelectorAll('[id^="current-page"]').forEach(input => {
+        input.addEventListener('change', (event) => {
+            const newPage = parseInt(event.target.value) - 1;
+            updatePage(newPage);
+        });
+    });
+
+    pageSizeDropdowns.forEach(dropdown => {
+        dropdown.addEventListener('change', () => {
+            pageSizeDropdowns.forEach(d => d.value = dropdown.value);
+            currentPage = 0;
+            const searchQuery = document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value;
+            fetchKeys(searchQuery).then(displayKeys);
+        });
     });
 
     window.deleteKey = async function (key) {
@@ -78,7 +105,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const response = await fetch(`/delete/${key}?${queryParams}`, { method: 'DELETE' });
         if (response.ok) {
             showAlert('Key deleted successfully', 'success');
-            fetchKeys().then(displayKeys);
+            const searchQuery = document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value;
+            fetchKeys(searchQuery).then(displayKeys);
         } else {
             showAlert('Failed to delete key');
         }
@@ -107,11 +135,22 @@ document.addEventListener('DOMContentLoaded', function () {
             showAlert('Key created successfully', 'success');
             document.getElementById('new-key').value = '';
             document.getElementById('new-value').value = '';
-            fetchKeys().then(displayKeys);
+            const searchQuery = document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value;
+            fetchKeys(searchQuery).then(displayKeys);
         } else {
             const errorMessage = await response.text();
             showAlert(`Failed to create key: ${errorMessage}`);
         }
+    });
+
+    document.getElementById('search-input-top').addEventListener('input', (event) => {
+        currentPage = 0;
+        fetchKeys(event.target.value).then(displayKeys);
+    });
+
+    document.getElementById('search-input-bottom').addEventListener('input', (event) => {
+        currentPage = 0;
+        fetchKeys(event.target.value).then(displayKeys);
     });
 
     fetchKeys().then(displayKeys);

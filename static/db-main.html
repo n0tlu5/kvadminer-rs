@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="info-bar">Not connected</div>
+    <div class="info-bar" id="info-bar">Not connected</div>
     <div class="main-content">
         <div class="sidebar">
             <h3>KVAdminer-RS</h3>
@@ -16,6 +16,24 @@
         </div>
         <div class="content">
             <h1>All Keys</h1>
+            <div id="top-controls">
+                <input type="text" id="search-input-top" placeholder="Search keys...">
+                <div id="pagination-controls-top" class="pagination-controls">
+                    <label for="page-size-top">Page size:</label>
+                    <select id="page-size-top">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div id="pagination-controls-top" class="pagination-controls">
+                    <button id="prev-page-top">Previous</button>
+                    <input type="text" id="current-page-top" size="3">
+                    <span>of <span id="total-pages-top"></span></span>
+                    <button id="next-page-top">Next</button>
+                </div>
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -26,9 +44,24 @@
                 </thead>
                 <tbody id="keys-table-body"></tbody>
             </table>
-            <div id="pagination-info"></div>
-            <button id="prev-page">Previous</button>
-            <button id="next-page">Next</button>
+            <div id="bottom-controls">
+                <input type="text" id="search-input-bottom" placeholder="Search keys...">
+                <div id="pagination-controls-top" class="pagination-controls">
+                    <label for="page-size-bottom">Page size:</label>
+                    <select id="page-size-bottom">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div id="pagination-controls-bottom" class="pagination-controls">
+                    <button id="prev-page-bottom">Previous</button>
+                    <input type="text" id="current-page-bottom" size="3">
+                    <span>of <span id="total-pages-bottom"></span></span>
+                    <button id="next-page-bottom">Next</button>
+                </div>
+            </div>
             <h2>Create Key</h2>
             <form id="create-form" class="inline-form">
                 <label for="new-key">Key:</label>
@@ -39,6 +72,6 @@
             </form>
         </div>
     </div>
-    <script src="/static/scripts/db-main.js"></script>
+   <script src="/static/scripts/db-main.js"></script>
 </body>
 </html>
