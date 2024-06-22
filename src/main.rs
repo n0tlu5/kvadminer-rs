@@ -117,20 +117,36 @@ async fn list_keys(
     let client = create_redis_client(&info)?;
     let mut con = client.get_connection()?;
 
-    let mut all_keys: Vec<String> = con.keys("*")?;
-    if let Some(search) = &params.search {
-        all_keys = all_keys
-            .into_iter()
-            .filter(|key| key.contains(search))
-            .collect();
+    let pattern = match &params.search {
+        Some(query) => format!("*{}*", query),
+        None => "*".to_string(),
+    };
+
+    let mut keys = vec![];
+    let mut cursor = 0;
+    loop {
+        let (new_cursor, batch): (u64, Vec<String>) = redis::cmd("SCAN")
+            .cursor_arg(cursor)
+            .arg("MATCH")
+            .arg(&pattern)
+            .arg("COUNT")
+            .arg(1000) // Use a large count to fetch more keys per scan
+            .query(&mut con)?;
+
+        keys.extend(batch);
+        if new_cursor == 0 {
+            break;
+        }
+        cursor = new_cursor;
     }
-    let total_keys = all_keys.len();
+
+    let total_keys = keys.len();
     let total_pages = (total_keys + params.page_size - 1) / params.page_size;
 
     let start_index = params.page * params.page_size;
     let end_index = std::cmp::min(start_index + params.page_size, total_keys);
 
-    let paginated_keys: Vec<(String, String)> = all_keys[start_index..end_index]
+    let paginated_keys: Vec<(String, String)> = keys[start_index..end_index]
         .iter()
         .map(|key| {
             let value: String = con.get(key).unwrap_or_else(|_| "N/A".to_string());

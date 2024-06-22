@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (host && port) {
         infoBar.textContent = `Connected to ${host}:${port} as ${username ? username : 'anonymous'}`;
     } else {
-        infoBar.textContent = `Connected to ${host}:${port}`;
+        infoBar.textContent = `Not connected`;
     }
 
     function showAlert(message, type = 'error') {
@@ -23,9 +23,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     let currentPage = 0;
-    const pageSize = 10;
+    const defaultPageSize = 10;
+    const pageSizeDropdownTop = document.getElementById('page-size-top');
+    const pageSizeDropdownBottom = document.getElementById('page-size-bottom');
+    pageSizeDropdownTop.value = defaultPageSize;
+    pageSizeDropdownBottom.value = defaultPageSize;
 
     async function fetchKeys(searchQuery = '') {
+        const pageSize = parseInt(pageSizeDropdownTop.value) || defaultPageSize;
         const queryParams = new URLSearchParams({
             host,
             port,
@@ -59,19 +64,56 @@ document.addEventListener('DOMContentLoaded', function () {
             keysTable.appendChild(row);
         });
 
-        document.getElementById('pagination-info').textContent = `Page ${paginationData.current_page + 1} of ${paginationData.total_pages}`;
+        document.getElementById('current-page-top').value = paginationData.current_page + 1;
+        document.getElementById('total-pages-top').textContent = paginationData.total_pages;
+        document.getElementById('current-page-bottom').value = paginationData.current_page + 1;
+        document.getElementById('total-pages-bottom').textContent = paginationData.total_pages;
+        currentPage = paginationData.current_page;
     }
 
-    document.getElementById('prev-page').addEventListener('click', () => {
-        if (currentPage > 0) {
-            currentPage--;
-            fetchKeys(document.getElementById('search-input').value).then(displayKeys);
+    function updatePage(newPage) {
+        if (newPage >= 0) {
+            currentPage = newPage;
+            fetchKeys(document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value).then(displayKeys);
         }
+    }
+
+    document.getElementById('prev-page-top').addEventListener('click', () => {
+        updatePage(currentPage - 1);
     });
 
-    document.getElementById('next-page').addEventListener('click', () => {
-        currentPage++;
-        fetchKeys(document.getElementById('search-input').value).then(displayKeys);
+    document.getElementById('next-page-top').addEventListener('click', () => {
+        updatePage(currentPage + 1);
+    });
+
+    document.getElementById('prev-page-bottom').addEventListener('click', () => {
+        updatePage(currentPage - 1);
+    });
+
+    document.getElementById('next-page-bottom').addEventListener('click', () => {
+        updatePage(currentPage + 1);
+    });
+
+    document.getElementById('current-page-top').addEventListener('change', (event) => {
+        const newPage = parseInt(event.target.value) - 1;
+        updatePage(newPage);
+    });
+
+    document.getElementById('current-page-bottom').addEventListener('change', (event) => {
+        const newPage = parseInt(event.target.value) - 1;
+        updatePage(newPage);
+    });
+
+    pageSizeDropdownTop.addEventListener('change', () => {
+        pageSizeDropdownBottom.value = pageSizeDropdownTop.value;
+        currentPage = 0;
+        fetchKeys(document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value).then(displayKeys);
+    });
+
+    pageSizeDropdownBottom.addEventListener('change', () => {
+        pageSizeDropdownTop.value = pageSizeDropdownBottom.value;
+        currentPage = 0;
+        fetchKeys(document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value).then(displayKeys);
     });
 
     window.deleteKey = async function (key) {
@@ -79,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const response = await fetch(`/delete/${key}?${queryParams}`, { method: 'DELETE' });
         if (response.ok) {
             showAlert('Key deleted successfully', 'success');
-            fetchKeys(document.getElementById('search-input').value).then(displayKeys);
+            fetchKeys(document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value).then(displayKeys);
         } else {
             showAlert('Failed to delete key');
         }
@@ -108,14 +150,19 @@ document.addEventListener('DOMContentLoaded', function () {
             showAlert('Key created successfully', 'success');
             document.getElementById('new-key').value = '';
             document.getElementById('new-value').value = '';
-            fetchKeys(document.getElementById('search-input').value).then(displayKeys);
+            fetchKeys(document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value).then(displayKeys);
         } else {
             const errorMessage = await response.text();
             showAlert(`Failed to create key: ${errorMessage}`);
         }
     });
 
-    document.getElementById('search-input').addEventListener('input', (event) => {
+    document.getElementById('search-input-top').addEventListener('input', (event) => {
+        currentPage = 0;
+        fetchKeys(event.target.value).then(displayKeys);
+    });
+
+    document.getElementById('search-input-bottom').addEventListener('input', (event) => {
         currentPage = 0;
         fetchKeys(event.target.value).then(displayKeys);
     });
