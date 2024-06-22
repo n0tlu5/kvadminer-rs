@@ -56,6 +56,7 @@ struct SetKeyRequest {
 struct PaginationParams {
     page: usize,
     page_size: usize,
+    search: Option<String>,
 }
 
 #[derive(serde::Serialize)]
@@ -116,7 +117,13 @@ async fn list_keys(
     let client = create_redis_client(&info)?;
     let mut con = client.get_connection()?;
 
-    let all_keys: Vec<String> = con.keys("*")?;
+    let mut all_keys: Vec<String> = con.keys("*")?;
+    if let Some(search) = &params.search {
+        all_keys = all_keys
+            .into_iter()
+            .filter(|key| key.contains(search))
+            .collect();
+    }
     let total_keys = all_keys.len();
     let total_pages = (total_keys + params.page_size - 1) / params.page_size;
 

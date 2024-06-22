@@ -25,14 +25,15 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentPage = 0;
     const pageSize = 10;
 
-    async function fetchKeys() {
+    async function fetchKeys(searchQuery = '') {
         const queryParams = new URLSearchParams({
             host,
             port,
             username,
             password,
             page: currentPage,
-            page_size: pageSize
+            page_size: pageSize,
+            search: searchQuery
         }).toString();
         const response = await fetch(`/keys?${queryParams}`);
         if (!response.ok) {
@@ -64,13 +65,13 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('prev-page').addEventListener('click', () => {
         if (currentPage > 0) {
             currentPage--;
-            fetchKeys().then(displayKeys);
+            fetchKeys(document.getElementById('search-input').value).then(displayKeys);
         }
     });
 
     document.getElementById('next-page').addEventListener('click', () => {
         currentPage++;
-        fetchKeys().then(displayKeys);
+        fetchKeys(document.getElementById('search-input').value).then(displayKeys);
     });
 
     window.deleteKey = async function (key) {
@@ -78,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const response = await fetch(`/delete/${key}?${queryParams}`, { method: 'DELETE' });
         if (response.ok) {
             showAlert('Key deleted successfully', 'success');
-            fetchKeys().then(displayKeys);
+            fetchKeys(document.getElementById('search-input').value).then(displayKeys);
         } else {
             showAlert('Failed to delete key');
         }
@@ -107,11 +108,16 @@ document.addEventListener('DOMContentLoaded', function () {
             showAlert('Key created successfully', 'success');
             document.getElementById('new-key').value = '';
             document.getElementById('new-value').value = '';
-            fetchKeys().then(displayKeys);
+            fetchKeys(document.getElementById('search-input').value).then(displayKeys);
         } else {
             const errorMessage = await response.text();
             showAlert(`Failed to create key: ${errorMessage}`);
         }
+    });
+
+    document.getElementById('search-input').addEventListener('input', (event) => {
+        currentPage = 0;
+        fetchKeys(event.target.value).then(displayKeys);
     });
 
     fetchKeys().then(displayKeys);
