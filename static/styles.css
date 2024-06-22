@@ -1,5 +1,24 @@
 body {
     display: flex;
+    flex-direction: column;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.info-bar {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+    text-align: center;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+.main-content {
+    margin-top: 50px; /* Make space for the info bar */
+    display: flex;
     margin: 0;
     font-family: Arial, sans-serif;
 }
@@ -11,12 +30,11 @@ body {
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     height: 100vh;
     position: fixed;
-    top: 0;
+    top: 50px; /* Below the info bar */
     left: 0;
     overflow-y: auto;
     z-index: 1000;
 }
-
 
 .sidebar h3 {
     text-align: center;
@@ -29,10 +47,8 @@ body {
     color: #333;
     text-decoration: none;
     margin-bottom: 10px;
-
     position: relative;
 }
-
 
 .sidebar a:hover {
     background-color: #e9ecef;
@@ -74,6 +90,16 @@ form {
     max-width: 400px;
 }
 
+form.inline-form {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+form.inline-form input {
+    flex: 1;
+}
+
 label {
     margin-bottom: 5px;
     color: #333;
@@ -81,7 +107,6 @@ label {
 
 input {
     padding: 10px;
-
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -100,28 +125,54 @@ button:hover {
     background-color: #0056b3;
 }
 
-ul {
-    list-style: none;
-
-    padding: 0;
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
 }
 
-
-li {
-    background-color: #fff;
-    padding: 10px;
-    margin-bottom: 10px;
+table, th, td {
     border: 1px solid #ccc;
-    border-radius: 5px;
-    display: flex;
-    justify-content: space-between;
 }
 
-li a {
-    text-decoration: none;
-    color: #007bff;
+th, td {
+    padding: 10px;
+    text-align: left;
 }
 
-li a:hover {
-    text-decoration: underline;
+th {
+    background-color: #f8f9fa;
+}
+
+.truncated {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.alert {
+    padding: 20px;
+    background-color: #f44336;
+    color: white;
+    margin-bottom: 15px;
+}
+
+.alert.success {background-color: #4CAF50;}
+.alert.info {background-color: #2196F3;}
+.alert.warning {background-color: #ff9800;}
+
+.closebtn {
+    margin-left: 15px;
+    color: white;
+    font-weight: bold;
+    float: right;
+    font-size: 22px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.closebtn:hover {
+    color: black;
 }
