@@ -22,13 +22,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentPage = 0;
     const defaultPageSize = 10;
-    const pageSizeDropdownTop = document.getElementById('page-size-top');
-    const pageSizeDropdownBottom = document.getElementById('page-size-bottom');
-    pageSizeDropdownTop.value = defaultPageSize;
-    pageSizeDropdownBottom.value = defaultPageSize;
+    const pageSizeDropdowns = document.querySelectorAll('[id^="page-size"]');
+    pageSizeDropdowns.forEach(dropdown => dropdown.value = defaultPageSize);
 
     async function fetchKeys(searchQuery = '') {
-        const pageSize = parseInt(pageSizeDropdownTop.value) || defaultPageSize;
+        const pageSize = parseInt(pageSizeDropdowns[0].value) || defaultPageSize;
         const queryParams = new URLSearchParams({
             host,
             port,
@@ -62,56 +60,44 @@ document.addEventListener('DOMContentLoaded', function () {
             keysTable.appendChild(row);
         });
 
-        document.getElementById('current-page-top').value = paginationData.current_page + 1;
-        document.getElementById('total-pages-top').textContent = paginationData.total_pages;
-        document.getElementById('current-page-bottom').value = paginationData.current_page + 1;
-        document.getElementById('total-pages-bottom').textContent = paginationData.total_pages;
+        const currentPageInputs = document.querySelectorAll('[id^="current-page"]');
+        const totalPagesSpans = document.querySelectorAll('[id^="total-pages"]');
+
+        currentPageInputs.forEach(input => input.value = paginationData.current_page + 1);
+        totalPagesSpans.forEach(span => span.textContent = paginationData.total_pages);
         currentPage = paginationData.current_page;
     }
 
     function updatePage(newPage) {
         if (newPage >= 0) {
             currentPage = newPage;
-            fetchKeys(document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value).then(displayKeys);
+            const searchQuery = document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value;
+            fetchKeys(searchQuery).then(displayKeys);
         }
     }
 
-    document.getElementById('prev-page-top').addEventListener('click', () => {
-        updatePage(currentPage - 1);
+    document.querySelectorAll('[id^="prev-page"]').forEach(button => {
+        button.addEventListener('click', () => updatePage(currentPage - 1));
     });
 
-    document.getElementById('next-page-top').addEventListener('click', () => {
-        updatePage(currentPage + 1);
+    document.querySelectorAll('[id^="next-page"]').forEach(button => {
+        button.addEventListener('click', () => updatePage(currentPage + 1));
     });
 
-    document.getElementById('prev-page-bottom').addEventListener('click', () => {
-        updatePage(currentPage - 1);
+    document.querySelectorAll('[id^="current-page"]').forEach(input => {
+        input.addEventListener('change', (event) => {
+            const newPage = parseInt(event.target.value) - 1;
+            updatePage(newPage);
+        });
     });
 
-    document.getElementById('next-page-bottom').addEventListener('click', () => {
-        updatePage(currentPage + 1);
-    });
-
-    document.getElementById('current-page-top').addEventListener('change', (event) => {
-        const newPage = parseInt(event.target.value) - 1;
-        updatePage(newPage);
-    });
-
-    document.getElementById('current-page-bottom').addEventListener('change', (event) => {
-        const newPage = parseInt(event.target.value) - 1;
-        updatePage(newPage);
-    });
-
-    pageSizeDropdownTop.addEventListener('change', () => {
-        pageSizeDropdownBottom.value = pageSizeDropdownTop.value;
-        currentPage = 0;
-        fetchKeys(document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value).then(displayKeys);
-    });
-
-    pageSizeDropdownBottom.addEventListener('change', () => {
-        pageSizeDropdownTop.value = pageSizeDropdownBottom.value;
-        currentPage = 0;
-        fetchKeys(document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value).then(displayKeys);
+    pageSizeDropdowns.forEach(dropdown => {
+        dropdown.addEventListener('change', () => {
+            pageSizeDropdowns.forEach(d => d.value = dropdown.value);
+            currentPage = 0;
+            const searchQuery = document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value;
+            fetchKeys(searchQuery).then(displayKeys);
+        });
     });
 
     window.deleteKey = async function (key) {
@@ -119,7 +105,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const response = await fetch(`/delete/${key}?${queryParams}`, { method: 'DELETE' });
         if (response.ok) {
             showAlert('Key deleted successfully', 'success');
-            fetchKeys(document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value).then(displayKeys);
+            const searchQuery = document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value;
+            fetchKeys(searchQuery).then(displayKeys);
         } else {
             showAlert('Failed to delete key');
         }
@@ -148,7 +135,8 @@ document.addEventListener('DOMContentLoaded', function () {
             showAlert('Key created successfully', 'success');
             document.getElementById('new-key').value = '';
             document.getElementById('new-value').value = '';
-            fetchKeys(document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value).then(displayKeys);
+            const searchQuery = document.getElementById('search-input-top').value || document.getElementById('search-input-bottom').value;
+            fetchKeys(searchQuery).then(displayKeys);
         } else {
             const errorMessage = await response.text();
             showAlert(`Failed to create key: ${errorMessage}`);
