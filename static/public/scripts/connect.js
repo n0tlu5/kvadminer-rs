@@ -24,6 +24,6 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem('redis_user', username);
         localStorage.setItem('redis_password', password);
 
-        window.location.href = '/static/db-main.html';
+        window.location.href = '/keys-management';
     });
 });

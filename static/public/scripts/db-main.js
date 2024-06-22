@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.editKey = function (key) {
         const params = new URLSearchParams({ host, port, username, password });
-        window.location.href = `/static/key-edit.html?key=${encodeURIComponent(key)}&${params.toString()}`;
+        window.location.href = `/edit-key?key=${encodeURIComponent(key)}&${params.toString()}`;
     };
 
     document.getElementById('create-form').addEventListener('submit', async function (event) {

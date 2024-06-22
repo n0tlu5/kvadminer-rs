@@ -1,8 +1,9 @@
-use actix_files as fs;
-use actix_web::{web, App, HttpResponse, HttpServer, Responder, ResponseError};
+use actix_files::NamedFile;
+use actix_web::{web, App, HttpResponse, HttpServer, ResponseError, Result};
 use redis::Commands;
 use serde::Deserialize;
 use std::fmt;
+use std::path::PathBuf;
 
 // Error module to handle different types of errors
 mod errors {
@@ -100,10 +101,6 @@ mod handlers {
         total_keys: usize,
     }
 
-    pub async fn index() -> impl Responder {
-        HttpResponse::Ok().body("Welcome to the KVAdminer-RS Web App")
-    }
-
     pub async fn get_key(
         info: web::Query<RedisInfo>,
         key: web::Path<String>,
@@ -194,6 +191,12 @@ mod handlers {
             total_keys,
         }))
     }
+
+    // Helper function to serve HTML files
+    pub async fn serve_html(file_path: &str) -> Result<NamedFile> {
+        let path: PathBuf = file_path.parse().unwrap();
+        Ok(NamedFile::open(path)?)
+    }
 }
 
 use handlers::*;
@@ -202,12 +205,20 @@ use handlers::*;
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .route("/", web::get().to(index))
+            .route("/", web::get().to(|| serve_html("./static/index.html")))
+            .route(
+                "/keys-management",
+                web::get().to(|| serve_html("./static/db-main.html")),
+            )
+            .route(
+                "/edit-key",
+                web::get().to(|| serve_html("./static/key-edit.html")),
+            )
             .route("/get/{key}", web::get().to(get_key))
             .route("/set", web::post().to(set_key))
             .route("/delete/{key}", web::delete().to(delete_key))
             .route("/keys", web::get().to(list_keys))
-            .service(fs::Files::new("/static", "./static").show_files_listing())
+            .service(actix_files::Files::new("/public", "./static/public"))
     })
     .bind("0.0.0.0:8080")?
     .run()
