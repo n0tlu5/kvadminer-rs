@@ -6,27 +6,25 @@
     <title>KVAdminer-RS - Edit Key</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
-
 <body>
-    <div class="sidebar">
-        <h3>KVAdminer-RS</h3>
-        <a href="/static/index.html" data-tooltip="Connect to Server">Connect to DB</a>
-        <a href="/static/db-main.html" data-tooltip="View and manage keys">DB Main</a>
-        <a href="/static/key-edit.html" data-tooltip="Edit an existing key">Key Edit</a>
+    <div class="info-bar">Not connected</div>
+    <div class="main-content">
+        <div class="sidebar">
+            <h3>KVAdminer-RS</h3>
+            <a href="/static/index.html" data-tooltip="Connect to Redis Database">Connect to DB</a>
+            <a href="/static/db-main.html" data-tooltip="View and manage keys in the Redis Database">Keys Management</a>
+        </div>
+        <div class="content">
+            <h1>Edit Key</h1>
+            <form id="edit-form">
+                <label for="key">Key:</label>
+                <input type="text" id="key" name="key" readonly>
+                <label for="value">Value:</label>
+                <input type="text" id="value" name="value">
+                <button type="submit">Save</button>
+            </form>
+        </div>
     </div>
-    <div class="content">
-        <h1>Edit Key</h1>
-
-        <form id="edit-form">
-            <label for="key">Key:</label>
-
-            <input type="text" id="key" name="key" readonly>
-            <label for="value">Value:</label>
-            <input type="text" id="value" name="value">
-            <button type="submit">Save</button>
-        </form>
-    </div>
-    <script src="/static/scripts.js"></script>
+    <script src="/static/scripts/key-edit.js"></script>
 </body>
-
 </html>

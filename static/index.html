@@ -2,34 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KVAdminer-RS</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
-
 <body>
-    <div class="sidebar">
-        <h3>KVAdminer-RS</h3>
-        <a href="/static/index.html" data-tooltip="Connect to Server">Connect to DB</a>
-        <a href="/static/db-main.html" data-tooltip="View and manage keys">DB Main</a>
-        <a href="/static/key-edit.html" data-tooltip="Edit an existing key">Key Edit</a>
+    <div class="info-bar">Not connected</div>
+    <div class="main-content">
+        <div class="sidebar">
+            <h3>KVAdminer-RS</h3>
+            <a href="/static/index.html" data-tooltip="Connect to kv database">Connect to DB</a>
+            <a href="/static/db-main.html" data-tooltip="View and manage keys">Keys Management</a>
+        </div>
+        <div class="content">
+            <h1>Connect to Redis</h1>
+            <form id="connect-form">
+                <label for="host">Host:</label>
+                <input type="text" id="host" name="host" required>
+                <label for="port">Port:</label>
+                <input type="text" id="port" name="port" required>
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password">
+                <button type="submit">Connect</button>
+            </form>
+        </div>
     </div>
-    <div class="content">
-        <h1>Connect to Redis</h1>
-
-        <form id="connect-form">
-            <label for="host">Host:</label>
-            <input type="text" id="host" name="host" required>
-            <label for="port">Port:</label>
-            <input type="text" id="port" name="port" required>
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username">
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password">
-            <button type="submit">Connect</button>
-        </form>
-    </div>
-    <script src="/static/scripts.js"></script>
+    <script src="/static/scripts/connect.js"></script>
 </body>
 </html>

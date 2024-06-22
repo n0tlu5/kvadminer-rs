@@ -2,13 +2,11 @@ use actix_files as fs;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder, ResponseError};
 use redis::Commands;
 use serde::Deserialize;
-
 use std::fmt;
 
 #[derive(Debug)]
 enum KVAdminerError {
     RedisError(String),
-
     InvalidRedisUrl,
 }
 
@@ -44,7 +42,6 @@ impl From<redis::RedisError> for KVAdminerError {
 struct RedisInfo {
     host: String,
     port: String,
-
     username: Option<String>,
     password: Option<String>,
 }
@@ -53,6 +50,20 @@ struct RedisInfo {
 struct SetKeyRequest {
     key: String,
     value: String,
+}
+
+#[derive(Deserialize)]
+struct PaginationParams {
+    page: usize,
+    page_size: usize,
+}
+
+#[derive(serde::Serialize)]
+struct PaginatedKeys {
+    keys: Vec<(String, String)>,
+    current_page: usize,
+    total_pages: usize,
+    total_keys: usize,
 }
 
 async fn index() -> impl Responder {
@@ -78,11 +89,9 @@ async fn set_key(
 ) -> Result<HttpResponse, KVAdminerError> {
     let client = create_redis_client(&info)?;
     let mut con = client.get_connection()?;
-
     let result: Result<(), _> = con.set(&item.key, &item.value);
     match result {
         Ok(_) => Ok(HttpResponse::Ok().body("Key set successfully")),
-
         Err(_) => Ok(HttpResponse::InternalServerError().body("Failed to set key")),
     }
 }
@@ -93,7 +102,6 @@ async fn delete_key(
 ) -> Result<HttpResponse, KVAdminerError> {
     let client = create_redis_client(&info)?;
     let mut con = client.get_connection()?;
-
     let result: Result<(), _> = con.del(&*key);
     match result {
         Ok(_) => Ok(HttpResponse::Ok().body("Key deleted successfully")),
@@ -101,14 +109,34 @@ async fn delete_key(
     }
 }
 
-async fn list_keys(info: web::Query<RedisInfo>) -> Result<HttpResponse, KVAdminerError> {
+async fn list_keys(
+    info: web::Query<RedisInfo>,
+    params: web::Query<PaginationParams>,
+) -> Result<HttpResponse, KVAdminerError> {
     let client = create_redis_client(&info)?;
     let mut con = client.get_connection()?;
-    let keys: Result<Vec<String>, _> = con.keys("*");
-    match keys {
-        Ok(keys) => Ok(HttpResponse::Ok().json(keys)),
-        Err(_) => Ok(HttpResponse::InternalServerError().body("Failed to list keys")),
-    }
+
+    let all_keys: Vec<String> = con.keys("*")?;
+    let total_keys = all_keys.len();
+    let total_pages = (total_keys + params.page_size - 1) / params.page_size;
+
+    let start_index = params.page * params.page_size;
+    let end_index = std::cmp::min(start_index + params.page_size, total_keys);
+
+    let paginated_keys: Vec<(String, String)> = all_keys[start_index..end_index]
+        .iter()
+        .map(|key| {
+            let value: String = con.get(key).unwrap_or_else(|_| "N/A".to_string());
+            (key.clone(), value)
+        })
+        .collect();
+
+    Ok(HttpResponse::Ok().json(PaginatedKeys {
+        keys: paginated_keys,
+        current_page: params.page,
+        total_pages,
+        total_keys,
+    }))
 }
 
 fn create_redis_client(info: &RedisInfo) -> Result<redis::Client, KVAdminerError> {
