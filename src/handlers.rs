@@ -1,5 +1,5 @@
 use actix_files::NamedFile;
-use actix_web::{web, HttpResponse, Result};
+use actix_web::{web, HttpResponse, HttpRequest, Result};
 use redis::Commands;
 use serde::Deserialize;
 use std::path::PathBuf;
@@ -7,7 +7,7 @@ use log::{info, error};
 
 use crate::errors::KVAdminerError;
 use crate::redis_ops::{self, RedisInfo};
-use crate::session::{self, AppState, SessionData};
+use crate::session::{self, AppState, SessionData, get_or_create_session_id};
 
 #[derive(Deserialize)]
 pub struct SetKeyRequest {
@@ -54,10 +54,11 @@ async fn get_redis_client(
 
 pub async fn get_key(
     state: web::Data<AppState>,
+    req: HttpRequest,
     info: web::Query<RedisInfo>,
     key: web::Path<String>,
 ) -> Result<HttpResponse, KVAdminerError> {
-    let session_id = info.session_id.clone().unwrap_or_else(session::generate_session_id);
+    let session_id = get_or_create_session_id(&req);
     let client_info = RedisInfo { session_id: Some(session_id.clone()), ..info.into_inner() };
     let client = get_redis_client(state, &client_info).await?;
     let mut con = client.get_connection()?;
@@ -67,14 +68,26 @@ pub async fn get_key(
             info!("Key retrieved successfully: {}", key);
             Ok(HttpResponse::Ok()
                 .header("X-Session-ID", session_id.clone())
-                .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+                .cookie(
+                    actix_web::cookie::Cookie::build("session_id", session_id.clone())
+                        .secure(true)
+                        .http_only(true)
+                        .same_site(actix_web::cookie::SameSite::Strict)
+                        .finish()
+                )
                 .body(val))
         },
         Err(_) => {
             info!("Key not found: {}", key);
             Ok(HttpResponse::NotFound()
                 .header("X-Session-ID", session_id.clone())
-                .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+                .cookie(
+                    actix_web::cookie::Cookie::build("session_id", session_id.clone())
+                        .secure(true)
+                        .http_only(true)
+                        .same_site(actix_web::cookie::SameSite::Strict)
+                        .finish()
+                )
                 .body("Key not found"))
         },
     }
@@ -82,10 +95,11 @@ pub async fn get_key(
 
 pub async fn set_key(
     state: web::Data<AppState>,
+    req: HttpRequest,
     info: web::Query<RedisInfo>,
     item: web::Json<SetKeyRequest>,
 ) -> Result<HttpResponse, KVAdminerError> {
-    let session_id = info.session_id.clone().unwrap_or_else(session::generate_session_id);
+    let session_id = get_or_create_session_id(&req);
     let client_info = RedisInfo { session_id: Some(session_id.clone()), ..info.into_inner() };
     let client = get_redis_client(state, &client_info).await?;
     let mut con = client.get_connection()?;
@@ -95,14 +109,26 @@ pub async fn set_key(
             info!("Key set successfully: {}", item.key);
             Ok(HttpResponse::Ok()
                 .header("X-Session-ID", session_id.clone())
-                .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+                .cookie(
+                    actix_web::cookie::Cookie::build("session_id", session_id.clone())
+                        .secure(true)
+                        .http_only(true)
+                        .same_site(actix_web::cookie::SameSite::Strict)
+                        .finish()
+                )
                 .body("Key set successfully"))
         },
         Err(_) => {
             error!("Failed to set key: {}", item.key);
             Ok(HttpResponse::InternalServerError()
                 .header("X-Session-ID", session_id.clone())
-                .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+                .cookie(
+                    actix_web::cookie::Cookie::build("session_id", session_id.clone())
+                        .secure(true)
+                        .http_only(true)
+                        .same_site(actix_web::cookie::SameSite::Strict)
+                        .finish()
+                )
                 .body("Failed to set key"))
         },
     }
@@ -110,10 +136,11 @@ pub async fn set_key(
 
 pub async fn delete_key(
     state: web::Data<AppState>,
+    req: HttpRequest,
     info: web::Query<RedisInfo>,
     key: web::Path<String>,
 ) -> Result<HttpResponse, KVAdminerError> {
-    let session_id = info.session_id.clone().unwrap_or_else(session::generate_session_id);
+    let session_id = get_or_create_session_id(&req);
     let client_info = RedisInfo { session_id: Some(session_id.clone()), ..info.into_inner() };
     let client = get_redis_client(state, &client_info).await?;
     let mut con = client.get_connection()?;
@@ -123,14 +150,26 @@ pub async fn delete_key(
             info!("Key deleted successfully: {}", key);
             Ok(HttpResponse::Ok()
                 .header("X-Session-ID", session_id.clone())
-                .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+                .cookie(
+                    actix_web::cookie::Cookie::build("session_id", session_id.clone())
+                        .secure(true)
+                        .http_only(true)
+                        .same_site(actix_web::cookie::SameSite::Strict)
+                        .finish()
+                )
                 .body("Key deleted successfully"))
         },
         Err(_) => {
             error!("Failed to delete key: {}", key);
             Ok(HttpResponse::InternalServerError()
                 .header("X-Session-ID", session_id.clone())
-                .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+                .cookie(
+                    actix_web::cookie::Cookie::build("session_id", session_id.clone())
+                        .secure(true)
+                        .http_only(true)
+                        .same_site(actix_web::cookie::SameSite::Strict)
+                        .finish()
+                )
                 .body("Failed to delete key"))
         },
     }
@@ -138,10 +177,11 @@ pub async fn delete_key(
 
 pub async fn list_keys(
     state: web::Data<AppState>,
+    req: HttpRequest,
     info: web::Query<RedisInfo>,
     params: web::Query<PaginationParams>,
 ) -> Result<HttpResponse, KVAdminerError> {
-    let session_id = info.session_id.clone().unwrap_or_else(session::generate_session_id);
+    let session_id = get_or_create_session_id(&req);
     let client_info = RedisInfo { session_id: Some(session_id.clone()), ..info.into_inner() };
     let client = get_redis_client(state, &client_info).await?;
     let mut con = client.get_connection()?;
@@ -186,7 +226,13 @@ pub async fn list_keys(
     info!("Listed keys for session: {}", session_id);
     Ok(HttpResponse::Ok()
         .header("X-Session-ID", session_id.clone())
-        .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+        .cookie(
+            actix_web::cookie::Cookie::build("session_id", session_id.clone())
+                .secure(true)
+                .http_only(true)
+                .same_site(actix_web::cookie::SameSite::Strict)
+                .finish()
+        )
         .json(PaginatedKeys {
             keys: paginated_keys,
             current_page: params.page,
