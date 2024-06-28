@@ -1,5 +1,6 @@
 use crate::errors::KVAdminerError;
 use serde::Deserialize;
+use log::info;
 
 #[derive(Deserialize)]
 pub struct RedisInfo {
@@ -23,6 +24,6 @@ pub fn create_redis_client(info: &RedisInfo) -> Result<redis::Client, KVAdminerE
     } else {
         format!("redis://{}:{}/", info.host, info.port)
     };
+    info!("Creating Redis client for URL: {}", redis_url);
     redis::Client::open(redis_url).map_err(|_| KVAdminerError::InvalidRedisUrl)
 }
-

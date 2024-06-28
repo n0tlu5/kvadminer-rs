@@ -2,6 +2,7 @@ use uuid::Uuid;
 use std::collections::HashMap;
 use tokio::sync::Mutex;
 use std::sync::Arc;
+use log::info;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -15,6 +16,7 @@ pub struct SessionData {
 }
 
 pub fn generate_session_id() -> String {
-    Uuid::new_v4().to_string()
+    let session_id = Uuid::new_v4().to_string();
+    info!("Generated new session ID: {}", session_id);
+    session_id
 }
-
