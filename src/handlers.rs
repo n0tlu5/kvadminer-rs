@@ -3,6 +3,7 @@ use actix_web::{web, HttpResponse, Result};
 use redis::Commands;
 use serde::Deserialize;
 use std::path::PathBuf;
+use log::{info, error};
 
 use crate::errors::KVAdminerError;
 use crate::redis_ops::{self, RedisInfo};
@@ -38,6 +39,7 @@ async fn get_redis_client(
     if let Some(session_data) = connections.get_mut(&session_id) {
         // Update last active time for session timeout
         session_data.last_active = std::time::Instant::now();
+        info!("Using existing Redis client for session: {}", session_id);
         Ok(session_data.client.clone())
     } else {
         let client = redis_ops::create_redis_client(info)?;
@@ -45,6 +47,7 @@ async fn get_redis_client(
             client: client.clone(),
             last_active: std::time::Instant::now(),
         });
+        info!("Created new Redis client for session: {}", session_id);
         Ok(client)
     }
 }
@@ -60,14 +63,20 @@ pub async fn get_key(
     let mut con = client.get_connection()?;
     let value: Result<String, _> = con.get(&*key);
     match value {
-        Ok(val) => Ok(HttpResponse::Ok()
-            .header("X-Session-ID", session_id.clone())
-            .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
-            .body(val)),
-        Err(_) => Ok(HttpResponse::NotFound()
-            .header("X-Session-ID", session_id.clone())
-            .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
-            .body("Key not found")),
+        Ok(val) => {
+            info!("Key retrieved successfully: {}", key);
+            Ok(HttpResponse::Ok()
+                .header("X-Session-ID", session_id.clone())
+                .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+                .body(val))
+        },
+        Err(_) => {
+            info!("Key not found: {}", key);
+            Ok(HttpResponse::NotFound()
+                .header("X-Session-ID", session_id.clone())
+                .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+                .body("Key not found"))
+        },
     }
 }
 
@@ -82,14 +91,20 @@ pub async fn set_key(
     let mut con = client.get_connection()?;
     let result: Result<(), _> = con.set(&item.key, &item.value);
     match result {
-        Ok(_) => Ok(HttpResponse::Ok()
-            .header("X-Session-ID", session_id.clone())
-            .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
-            .body("Key set successfully")),
-        Err(_) => Ok(HttpResponse::InternalServerError()
-            .header("X-Session-ID", session_id.clone())
-            .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
-            .body("Failed to set key")),
+        Ok(_) => {
+            info!("Key set successfully: {}", item.key);
+            Ok(HttpResponse::Ok()
+                .header("X-Session-ID", session_id.clone())
+                .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+                .body("Key set successfully"))
+        },
+        Err(_) => {
+            error!("Failed to set key: {}", item.key);
+            Ok(HttpResponse::InternalServerError()
+                .header("X-Session-ID", session_id.clone())
+                .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+                .body("Failed to set key"))
+        },
     }
 }
 
@@ -104,14 +119,20 @@ pub async fn delete_key(
     let mut con = client.get_connection()?;
     let result: Result<(), _> = con.del(&*key);
     match result {
-        Ok(_) => Ok(HttpResponse::Ok()
-            .header("X-Session-ID", session_id.clone())
-            .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
-            .body("Key deleted successfully")),
-        Err(_) => Ok(HttpResponse::InternalServerError()
-            .header("X-Session-ID", session_id.clone())
-            .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
-            .body("Failed to delete key")),
+        Ok(_) => {
+            info!("Key deleted successfully: {}", key);
+            Ok(HttpResponse::Ok()
+                .header("X-Session-ID", session_id.clone())
+                .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+                .body("Key deleted successfully"))
+        },
+        Err(_) => {
+            error!("Failed to delete key: {}", key);
+            Ok(HttpResponse::InternalServerError()
+                .header("X-Session-ID", session_id.clone())
+                .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
+                .body("Failed to delete key"))
+        },
     }
 }
 
@@ -162,6 +183,7 @@ pub async fn list_keys(
         })
         .collect();
 
+    info!("Listed keys for session: {}", session_id);
     Ok(HttpResponse::Ok()
         .header("X-Session-ID", session_id.clone())
         .header("Set-Cookie", format!("session_id={}; Secure; HttpOnly; SameSite=Strict", session_id))
@@ -178,4 +200,3 @@ pub async fn serve_html(file_path: &str) -> Result<NamedFile> {
     let path: PathBuf = file_path.parse().unwrap();
     Ok(NamedFile::open(path)?)
 }
-

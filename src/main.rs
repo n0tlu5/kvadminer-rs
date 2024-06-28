@@ -3,6 +3,8 @@ use actix_web::{web, App, HttpServer};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use log::info;
+use env_logger::Env;
 
 mod errors;
 mod redis_ops;
@@ -14,6 +16,9 @@ use session::AppState;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
+    info!("Starting the server...");
+
     let app_state = web::Data::new(AppState {
         connections: Arc::new(Mutex::new(HashMap::new())),
         session_timeout: std::time::Duration::from_secs(3600), // 1 hour timeout
