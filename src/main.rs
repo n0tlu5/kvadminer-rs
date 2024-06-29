@@ -1,8 +1,8 @@
 use actix_web::{web, App, HttpServer};
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tokio::time::{interval, Duration};
+use std::collections::HashMap;
+use std::time::Duration;
 use log::info;
 use env_logger::Env;
 
@@ -12,7 +12,7 @@ mod handlers;
 mod session;
 
 use handlers::*;
-use session::{AppState, cleanup_expired_sessions};
+use session::AppState;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -26,10 +26,10 @@ async fn main() -> std::io::Result<()> {
 
     let app_state_clone = app_state.clone();
     tokio::spawn(async move {
-        let mut interval = interval(Duration::from_secs(60)); // Cleanup interval
+        let mut interval = tokio::time::interval(Duration::from_secs(60)); // Cleanup interval
         loop {
             interval.tick().await;
-            cleanup_expired_sessions(app_state_clone.clone()).await;
+            session::cleanup_expired_sessions(app_state_clone.clone()).await;
         }
     });
 
@@ -49,6 +49,8 @@ async fn main() -> std::io::Result<()> {
             .route("/set", web::post().to(set_key))
             .route("/delete/{key}", web::delete().to(delete_key))
             .route("/keys", web::get().to(list_keys))
+            .route("/get-hash/{key}", web::get().to(get_hash))
+            .route("/set-hash", web::post().to(set_hash))
             .service(actix_files::Files::new("/public", "./static/public"))
     })
     .bind("0.0.0.0:8080")?
