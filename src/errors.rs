@@ -6,6 +6,7 @@ use log::error;
 pub enum KVAdminerError {
     RedisError(String),
     InvalidRedisUrl,
+    TypeError,
 }
 
 impl fmt::Display for KVAdminerError {
@@ -13,6 +14,7 @@ impl fmt::Display for KVAdminerError {
         match self {
             KVAdminerError::RedisError(err) => write!(f, "Redis Error: {}", err),
             KVAdminerError::InvalidRedisUrl => write!(f, "Invalid Redis URL"),
+            KVAdminerError::TypeError => write!(f, "Type conversion error occurred"),
         }
     }
 }
@@ -27,6 +29,10 @@ impl ResponseError for KVAdminerError {
             KVAdminerError::InvalidRedisUrl => {
                 error!("Invalid Redis URL");
                 HttpResponse::InternalServerError().body("Invalid Redis URL")
+            }
+            KVAdminerError::TypeError => {
+                error!("Type conversion error occurred");
+                HttpResponse::InternalServerError().body("Type conversion error occurred")
             }
         }
     }
