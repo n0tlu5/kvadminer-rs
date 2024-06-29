@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use tokio::sync::Mutex;
 use std::sync::Arc;
 use log::info;
-use actix_web::{HttpRequest, HttpMessage};
+use actix_web::{HttpRequest};
 use std::time::{Duration, Instant};
 
 #[derive(Clone)]

@@ -7,7 +7,7 @@ use log::{info, error};
 
 use crate::errors::KVAdminerError;
 use crate::redis_ops::{self, RedisInfo, get_string_value};
-use crate::session::{self, AppState, SessionData, get_or_create_session_id};
+use crate::session::{AppState, SessionData, get_or_create_session_id};
 
 #[derive(Deserialize)]
 pub struct SetKeyRequest {
