@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use log::{info, error};
 
 use crate::errors::KVAdminerError;
-use crate::redis_ops::{self, RedisInfo};
+use crate::redis_ops::{self, RedisInfo, get_string_value};
 use crate::session::{self, AppState, SessionData, get_or_create_session_id};
 
 #[derive(Deserialize)]
@@ -62,12 +62,14 @@ pub async fn get_key(
     let client_info = RedisInfo { session_id: Some(session_id.clone()), ..info.into_inner() };
     let client = get_redis_client(state, &client_info).await?;
     let mut con = client.get_connection()?;
-    let value: Result<String, _> = con.get(&*key);
-    match value {
+    match get_string_value(&mut con, &key).map_err(|e| {
+        error!("Error getting key from Redis: {}", e);
+        e
+    }) {
         Ok(val) => {
             info!("Key retrieved successfully: {}", key);
             Ok(HttpResponse::Ok()
-                .header("X-Session-ID", session_id.clone())
+                .append_header(("X-Session-ID", session_id.clone()))
                 .cookie(
                     actix_web::cookie::Cookie::build("session_id", session_id.clone())
                         .secure(true)
@@ -77,19 +79,7 @@ pub async fn get_key(
                 )
                 .body(val))
         },
-        Err(_) => {
-            info!("Key not found: {}", key);
-            Ok(HttpResponse::NotFound()
-                .header("X-Session-ID", session_id.clone())
-                .cookie(
-                    actix_web::cookie::Cookie::build("session_id", session_id.clone())
-                        .secure(true)
-                        .http_only(true)
-                        .same_site(actix_web::cookie::SameSite::Strict)
-                        .finish()
-                )
-                .body("Key not found"))
-        },
+        Err(err) => Err(err),
     }
 }
 
@@ -108,7 +98,7 @@ pub async fn set_key(
         Ok(_) => {
             info!("Key set successfully: {}", item.key);
             Ok(HttpResponse::Ok()
-                .header("X-Session-ID", session_id.clone())
+                .append_header(("X-Session-ID", session_id.clone()))
                 .cookie(
                     actix_web::cookie::Cookie::build("session_id", session_id.clone())
                         .secure(true)
@@ -121,7 +111,7 @@ pub async fn set_key(
         Err(_) => {
             error!("Failed to set key: {}", item.key);
             Ok(HttpResponse::InternalServerError()
-                .header("X-Session-ID", session_id.clone())
+                .append_header(("X-Session-ID", session_id.clone()))
                 .cookie(
                     actix_web::cookie::Cookie::build("session_id", session_id.clone())
                         .secure(true)
@@ -149,7 +139,7 @@ pub async fn delete_key(
         Ok(_) => {
             info!("Key deleted successfully: {}", key);
             Ok(HttpResponse::Ok()
-                .header("X-Session-ID", session_id.clone())
+                .append_header(("X-Session-ID", session_id.clone()))
                 .cookie(
                     actix_web::cookie::Cookie::build("session_id", session_id.clone())
                         .secure(true)
@@ -162,7 +152,7 @@ pub async fn delete_key(
         Err(_) => {
             error!("Failed to delete key: {}", key);
             Ok(HttpResponse::InternalServerError()
-                .header("X-Session-ID", session_id.clone())
+                .append_header(("X-Session-ID", session_id.clone()))
                 .cookie(
                     actix_web::cookie::Cookie::build("session_id", session_id.clone())
                         .secure(true)
@@ -218,14 +208,14 @@ pub async fn list_keys(
     let paginated_keys: Vec<(String, String)> = keys[start_index..end_index]
         .iter()
         .map(|key| {
-            let value: String = con.get(key).unwrap_or_else(|_| "N/A".to_string());
+            let value: String = get_string_value(&mut con, key).unwrap_or_else(|_| "N/A".to_string());
             (key.clone(), value)
         })
         .collect();
 
     info!("Listed keys for session: {}", session_id);
     Ok(HttpResponse::Ok()
-        .header("X-Session-ID", session_id.clone())
+        .append_header(("X-Session-ID", session_id.clone()))
         .cookie(
             actix_web::cookie::Cookie::build("session_id", session_id.clone())
                 .secure(true)
